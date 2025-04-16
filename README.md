@@ -24,11 +24,30 @@
 pip install -r requirements.txt
 ```
 
+Выполните создание базы данных
+
+```sh
+python manage.py createsuperuser
+```
+
+Выполните миграции
+
+```sh
+python mange.py makemigrations
+```
+
+```sh
+python manage.py migrate
+```
+
 Запустите разработческий сервер
 
 ```sh
 python3 manage.py runserver
 ```
+
+Перейдите в админ панель (`/admin`) и создайте покемонов и места и появления.
+
 
 ### Переменные окружения
 
