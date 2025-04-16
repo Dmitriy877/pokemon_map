@@ -3,6 +3,7 @@ import folium
 
 from django.http import HttpResponseNotFound
 from django.shortcuts import render
+from django.utils import timezone
 
 from pokemon_entities.models import Pokemon
 from pokemon_entities.models import PokemonEntity
@@ -32,11 +33,13 @@ def add_pokemon(folium_map, lat, lon, image_url=DEFAULT_IMAGE_URL):
 def show_all_pokemons(request):
     
     pokemons = Pokemon.objects.all()
-    pokemons_entity = PokemonEntity.objects.all()
-    print(pokemons_entity)
+    alive_pokemons = PokemonEntity.objects.filter(
+        appeared_at__lte=timezone.localtime(),
+        disappeared_at__gte=timezone.localtime()
+    )
 
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
-    for pokemon_entity in pokemons_entity:
+    for pokemon_entity in alive_pokemons:
         picture_url = request.build_absolute_uri(pokemon_entity.pokemon.picture.url)
         add_pokemon(
             folium_map, pokemon_entity.lat,
@@ -83,17 +86,22 @@ def show_pokemon(request, pokemon_id):
     for pokemon_entity in pokemon.pokemon_entities.all():
         requested_pokemon["entities"].append({
             "lat": pokemon_entity.lat,
-            "lon": pokemon_entity.lon
+            "lon": pokemon_entity.lon,
+            "level": pokemon_entity.level,
+            "health": pokemon_entity.health,
+            "attack": pokemon_entity.attack,
+            "defend": pokemon_entity.defend,
+            "stamina": pokemon_entity.stamina
             })
-        
+
     if pokemon.previous_evolution:
         requested_pokemon["previous_evolution"] = {
             "title_ru": pokemon.previous_evolution.title,
             "pokemon_id": pokemon.previous_evolution.id,
             "img_url": request.build_absolute_uri(pokemon.previous_evolution.picture.url)
         }
-    
-    if pokemon.next_evolution:
+
+    if pokemon.next_evolutions.all()[0]:
         requested_pokemon["next_evolution"] = {
             "title_ru": pokemon.next_evolution.title,
             "pokemon_id": pokemon.next_evolution.id,
